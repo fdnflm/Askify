@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Регистрация{% endblock %}
+
+{% block nav %}
+<div class="collapse navbar-collapse" id="navbarSupportedContent">
+  <ul class="navbar-nav mr-auto">
+    <li class="nav-item active">
+    </li>
+  </ul>
+  <div>
+    <a class="btn btn-warning" href="{{ url_for('login') }}">Вход</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+<div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
+  <div class="card card-signin my-5 white">
+    <div class="card-body">
+      <h5 class="text-center pb-3">Регистрация</h5>
+      <form action="/register" method="POST" class="needs-validation">
+        {{ form.hidden_tag() }}
+        <div class="form-group">
+          {{ form.email(class="form-control py-2", placeholder=form.email.label.text) }}
+          {% for error in form.email.errors %}
+          <span style="color: rgb(172, 0, 0);">{{ error }}</span>
+          {% endfor %}
+          <div class="invalid-feedback">Please provide a valid email.</div>
+        </div>
+        <div class="form-group">
+          {{ form.username(class="form-control py-2", placeholder=form.username.label.text) }}
+          {% for error in form.username.errors %}
+          <span style="color: rgb(172, 0, 0);">{{ error }}</span>
+          {% endfor %}
+          <div class="invalid-feedback">Please provide a valid username.</div>
+        </div>
+        <div class="form-group">
+          {{ form.password(class="form-control py-2", placeholder=form.password.label.text) }}
+          {% for error in form.password.errors %}
+          <span style="color: rgb(172, 0, 0);">{{ error }}</span>
+          {% endfor %}
+          <div class="invalid-feedback">Please provide a valid password.</div>
+        </div>
+        <div class="form-group">
+          {{ form.password_repeat(class="form-control py-2", placeholder=form.password_repeat.label.text) }}
+          {% for error in form.password_repeat.errors %}
+          <span style="color: rgb(172, 0, 0);">{{ error }}</span>
+          {% endfor %}
+          <div class="invalid-feedback">Please provide a valid password.</div>
+        </div>
+        {{ form.submit(class="btn btn-success btn-block") }}
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
