@@ -23,6 +23,7 @@ class User(UserMixin, Base):
 	confirmed = db.Column(db.Integer(), default=0)
 	confirm_token = db.Column(db.String(64), unique=True)
 	banned = db.Column(db.Integer(), default=0)
+	old_token = db.Column(db.String(64))
 
 	def __init__(self, username, password, email):
 		self.username = username
