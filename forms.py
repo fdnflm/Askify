@@ -16,3 +16,14 @@ class RegisterForm(FlaskForm):
 	password = PasswordField("Пароль", validators=[DataRequired(), Length(min=8, message="Длина пароля должна быть больше 8 символов.")])
 	password_repeat = PasswordField("Повторите пароль", validators=[DataRequired(), EqualTo("password", "Пароли должны совпадать.")])
 	submit = SubmitField("Создать аккаунт")
+
+
+class ResetForm(FlaskForm):
+	email = StringField("Электронная почта", validators=[DataRequired(), Email(message="Введите верный email адрес")])
+	submit = SubmitField("Сбросить пароль")
+
+
+class NewPassForm(FlaskForm):
+	password = PasswordField("Пароль", validators=[DataRequired(), Length(min=8, message="Длина пароля должна быть больше 8 символов.")])
+	password_repeat = PasswordField("Повторите пароль", validators=[DataRequired(), EqualTo("password", "Пароли должны совпадать.")])
+	submit = SubmitField("Сбросить пароль")

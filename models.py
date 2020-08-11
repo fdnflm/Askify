@@ -29,6 +29,9 @@ class User(UserMixin, Base):
 		self.password = generate_password_hash(password)
 		self.email = email
 
+	def set_password(self, password):
+		self.password = generate_password_hash(password)
+
 	def __repr__(self):
 		return f"<User-{self.name}>"
 
