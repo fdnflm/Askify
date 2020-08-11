@@ -13,44 +13,40 @@
 {% endblock %}
 
 {% block content %}
-<div class="row">
-  <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
-    <div class="card card-signin mt-5 white">
-      <div class="card-body">
-        <h5 class="text-center pb-3">Вход</h5>
-        <form action="/login" method="POST" class="needs-validation">
-          {{ form.hidden_tag() }}
-          <div class="form-group">
-            {{ form.username(class="form-control py-2", placeholder=form.username.label.text) }}
-            {% for error in form.username.errors %}
-            <span style="color: rgb(172, 0, 0);">{{ error }}</span>
-            {% endfor %}
-            <div class="invalid-feedback">Please provide a valid username.</div>
-          </div>
-          <div class="form-group">
-            {{ form.password(class="form-control py-2", placeholder=form.password.label.text) }}
-            {% for error in form.password.errors %}
-            <span style="color: rgb(172, 0, 0);">{{ error }}</span>
-            {% endfor %}
-            <div class="invalid-feedback">Please provide a valid password.</div>
-          </div>
-          <div class="form-group pl-4">
-            {{ form.remember(class="form-check-input py-2") }}
-            <label class="form-check-label" for="remember">{{ form.remember.label.text }}</label>
-            {% for error in form.password.errors %}
-            <span style="color: rgb(172, 0, 0);">{{ error }}</span>
-            {% endfor %}
-            <div class="invalid-feedback">Please provide a valid password.</div>
-          </div>
-          {{ form.submit(class="btn btn-success btn-block") }}
-        </form>
+  <div class="row">
+    <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
+      <div class="card card-signin mt-5 white">
+        <div class="card-body">
+          <h5 class="text-center pb-3">Вход</h5>
+          <form action="/login" method="POST" class="needs-validation">
+            {{ form.hidden_tag() }}
+            <div class="form-group">
+              {{ form.username(class="form-control py-2", placeholder=form.username.label.text) }}
+              {% for error in form.username.errors %}
+                <p class="text-danger">{{ error }}</p>
+              {% endfor %}
+              <div class="invalid-feedback">Пожалуйста, введите верное имя пользователя.</div>
+            </div>
+            <div class="form-group">
+              {{ form.password(class="form-control py-2", placeholder=form.password.label.text) }}
+              {% for error in form.password.errors %}
+                <p class="text-danger">{{ error }}</p>
+              {% endfor %}
+              <div class="invalid-feedback">Пожалуйста, введите верный пароль.</div>
+            </div>
+            <div class="form-group pl-4">
+              {{ form.remember(class="form-check-input py-2") }}
+              <label class="form-check-label" for="remember">{{ form.remember.label.text }}</label>
+            </div>
+            {{ form.submit(class="btn btn-success btn-block") }}
+          </form>
+        </div>
+      </div>
+      <div class="text-center pt-2">
+        <h6 class="text-muted">Нет аккаунта? <a href="{{ url_for('register') }}">Зарегистрироваться.</a></h6>
+        <h6 class="text-muted">Забыли пароль? <a href="{{ url_for('reset') }}">Сбросить пароль.</a></h6>
       </div>
     </div>
-    <div class="text-center pt-2">
-      <h6 class="text-muted">Нет аккаунта? <a href="{{ url_for('register') }}">Зарегистрироваться.</a></h6>
-      <h6 class="text-muted">Забыли пароль? <a href="{{ url_for('reset') }}">Сбросить пароль.</a></h6>
-    </div>
   </div>
-</div>
 {% endblock %}
 

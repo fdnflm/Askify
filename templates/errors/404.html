@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="text-center pt-5">
-  <h2>Страница не найдена. 404</h2>
-  {% if msg %}
-    <h5>{{msg}}</h5>
-  {% else %}
-    <h5>Похоже, что такой страницы не существует.</h5>
-  {% endif %}
-  {% if request.referrer %}
-    <a href="{{ request.referrer }}" class="btn btn-dark mt-2">Вернуться назад</a>
-  {% else %}
-    <a href="{{ url_for('index') }}" class="btn btn-dark mt-2">Вернуться на главную</a>
-  {% endif %}
-  <h1 class="text-center pt-5">😣</h1>
-</div>
+  <div class="text-center pt-5">
+    <h2>Страница не найдена. 404</h2>
+    {% if msg %}
+      <h5>{{msg}}</h5>
+    {% else %}
+      <h5>Похоже, что такой страницы не существует.</h5>
+    {% endif %}
+    {% if request.referrer %}
+      <a href="{{ request.referrer }}" class="btn btn-dark mt-2">Вернуться назад</a>
+    {% else %}
+      <a href="{{ url_for('index') }}" class="btn btn-dark mt-2">Вернуться на главную</a>
+    {% endif %}
+    <h1 class="text-center pt-5">😣</h1>
+  </div>
 {% endblock %}
