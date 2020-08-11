@@ -41,6 +41,7 @@ def load_user(user_id):
 def init():
 	db.create_all()
 	user = User("admin", "password", "admin@local.com")
+	user.confirmed = 1
 	db.session.add(user)
 	db.session.commit()
 
