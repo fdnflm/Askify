@@ -3,7 +3,6 @@
 {% block title %}Регистрация{% endblock %}
 
 {% block nav %}
-<div class="collapse navbar-collapse" id="navbarSupportedContent">
   <ul class="navbar-nav mr-auto">
     <li class="nav-item active">
     </li>
@@ -11,13 +10,12 @@
   <div>
     <a class="btn btn-warning" href="{{ url_for('login') }}">Вход</a>
   </div>
-</div>
 {% endblock %}
 
 {% block content %}
 <div class="row">
 <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
-  <div class="card card-signin my-5 white">
+  <div class="card card-signin mt-5 white">
     <div class="card-body">
       <h5 class="text-center pb-3">Регистрация</h5>
       <form action="/register" method="POST" class="needs-validation">
@@ -53,6 +51,9 @@
         {{ form.submit(class="btn btn-success btn-block") }}
       </form>
     </div>
+  </div>
+  <div class="text-center pt-2">
+    <h6 class="text-muted">Уже есть аккаунт? <a href="{{ url_for('login') }}">Войти.</a></h6>
   </div>
 </div>
 {% endblock %}
