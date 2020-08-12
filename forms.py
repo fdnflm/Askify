@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms.fields import StringField, SubmitField, BooleanField, PasswordField
+from wtforms.fields import StringField, SubmitField, BooleanField, PasswordField, TextAreaField
 from wtforms.validators import DataRequired, Email, Length, EqualTo
 
 
@@ -27,3 +27,11 @@ class NewPassForm(FlaskForm):
 	password = PasswordField("Пароль", validators=[DataRequired(), Length(min=8, message="Длина пароля должна быть больше 8 символов.")])
 	password_repeat = PasswordField("Повторите пароль", validators=[DataRequired(), EqualTo("password", "Пароли должны совпадать.")])
 	submit = SubmitField("Сбросить пароль")
+
+
+class QuestionForm(FlaskForm):
+	message = TextAreaField('Вопрос', validators=[
+							DataRequired(),
+							Length(max=140, message="Максимальная длина 140 символов.")])
+	remember = BooleanField("Анонимно")
+	submit = SubmitField('Отправить')

@@ -37,6 +37,18 @@ class User(UserMixin, Base):
 		return f"<User-{self.name}>"
 
 
+class Question(Base):
+	__tablename__ = "questions"
+	text = db.Column(db.String(140))
+	answer = db.Column(db.String(512))
+	user_id = db.Column(db.Integer(), db.ForeignKey('user.id'))
+	to_user_id = db.Column(db.Integer(), db.ForeignKey('user.id'))
+	is_anonymous = db.Column(db.Integer())
+
+	def __repr__(self):
+		return f"<Question-{self.id}>"
+
+
 @login_manager.user_loader
 def load_user(user_id):
 	return User.query.get(user_id)
