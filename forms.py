@@ -11,27 +11,86 @@ class LoginForm(FlaskForm):
 
 
 class RegisterForm(FlaskForm):
-	email = StringField("Электронная почта", validators=[DataRequired(), Email(message="Введите верный email адрес")])
+	email = StringField("Электронная почта",
+						validators=[
+							DataRequired(),
+							Email(message="Введите верный email адрес")
+						])
 	username = StringField("Имя пользователя", validators=[DataRequired()])
-	password = PasswordField("Пароль", validators=[DataRequired(), Length(min=8, message="Длина пароля должна быть больше 8 символов.")])
-	password_repeat = PasswordField("Повторите пароль", validators=[DataRequired(), EqualTo("password", "Пароли должны совпадать.")])
+	first_name = StringField(
+		"Имя",
+		validators=[
+			DataRequired(),
+			Length(max=32,
+				   message="Длина имени не должна превышать 32 символа.")
+		])
+	last_name = StringField(
+		"Фамилия",
+		validators=[
+			DataRequired(),
+			Length(max=32,
+				   message="Длина фамилии не должна превышать 32 символа.")
+		])
+	password = PasswordField(
+		"Пароль",
+		validators=[
+			DataRequired(),
+			Length(min=8,
+				   message="Длина пароля должна быть больше 8 символов.")
+		])
+	password_repeat = PasswordField("Повторите пароль",
+									validators=[
+										DataRequired(),
+										EqualTo("password",
+												"Пароли должны совпадать.")
+									])
 	submit = SubmitField("Создать аккаунт")
 
 
 class ResetForm(FlaskForm):
-	email = StringField("Электронная почта", validators=[DataRequired(), Email(message="Введите верный email адрес")])
+	email = StringField("Электронная почта",
+						validators=[
+							DataRequired(),
+							Email(message="Введите верный email адрес")
+						])
 	submit = SubmitField("Сбросить пароль")
 
 
 class NewPassForm(FlaskForm):
-	password = PasswordField("Пароль", validators=[DataRequired(), Length(min=8, message="Длина пароля должна быть больше 8 символов.")])
-	password_repeat = PasswordField("Повторите пароль", validators=[DataRequired(), EqualTo("password", "Пароли должны совпадать.")])
+	password = PasswordField(
+		"Пароль",
+		validators=[
+			DataRequired(),
+			Length(min=8,
+				   message="Длина пароля должна быть больше 8 символов.")
+		])
+	password_repeat = PasswordField("Повторите пароль",
+									validators=[
+										DataRequired(),
+										EqualTo("password",
+												"Пароли должны совпадать.")
+									])
 	submit = SubmitField("Сбросить пароль")
 
 
 class QuestionForm(FlaskForm):
-	message = TextAreaField('Вопрос', validators=[
-							DataRequired(),
-							Length(max=140, message="Максимальная длина 140 символов.")])
-	remember = BooleanField("Анонимно")
+	message = TextAreaField('Вопрос',
+							validators=[
+								DataRequired(),
+								Length(
+									max=140,
+									message="Максимальная длина 140 символов.")
+							])
+	anon = BooleanField("Анонимно")
+	submit = SubmitField('Отправить')
+
+
+class AnswerForm(FlaskForm):
+	message = StringField('Ответ',
+						  validators=[
+							  DataRequired(),
+							  Length(
+								  max=140,
+								  message="Максимальная длина 140 символов.")
+						  ])
 	submit = SubmitField('Отправить')
