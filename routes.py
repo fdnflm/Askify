@@ -1,31 +1,88 @@
 from app import app, db, mail
 from flask import render_template, redirect, abort, flash, request, url_for
 from flask_login import current_user, login_user, login_required, logout_user
-from models import User
-from forms import LoginForm, RegisterForm, ResetForm, NewPassForm
+from models import User, Question
+from forms import LoginForm, RegisterForm, ResetForm, NewPassForm, QuestionForm, AnswerForm
 from werkzeug.security import check_password_hash
 from flask_mail import Message
 from misc import generate_id, check_confirmed
+from datetime import datetime
 
 
 @app.route("/")
 def index():
 	if current_user.is_authenticated:
 		if current_user.confirmed:
-			return render_template("app/user.html")
+			question_form = QuestionForm()
+			questions_amount = len(
+				Question.query.filter_by(to_user_id=current_user.id).filter(
+					Question.answer == None).all())
+			return render_template("app/user.html",
+								   form=question_form,
+								   questions_amount=questions_amount)
 		else:
 			return redirect(url_for('unconfirmed'))
 	return render_template("app/index.html")
 
 
-@app.route("/user/<username>")
+@app.route("/user/<username>", methods=["GET", "POST"])
 @login_required
 @check_confirmed
 def user(username):
 	if current_user.username == username:
 		return redirect(url_for('index'))
+	question_form = QuestionForm()
 	user = User.query.filter_by(username=username).first_or_404()
-	return render_template("app/user.html", user=user)
+	if question_form.validate_on_submit():
+		q = Question()
+		q.text = question_form.message.data
+		q.is_anonymous = question_form.anon.data
+		q.user_id = current_user.id
+		q.to_user_id = user.id
+		db.session.add(q)
+		db.session.commit()
+		flash(f'Вопрос отправлен пользователю @{username}.')
+		return redirect(url_for('user', username=username))
+	questions = Question.query.filter_by(to_user_id=user.id).filter(
+		Question.answer != None).all()
+	questions_amount = len(
+		Question.query.filter_by(to_user_id=current_user.id).filter(
+			Question.answer == None).all())
+	return render_template("app/user.html",
+						   user=user,
+						   form=question_form,
+						   questions=reversed(questions),
+						   questions_amount=questions_amount)
+
+
+@app.route("/questions", methods=["GET", "POST"])
+@login_required
+@check_confirmed
+def questions():
+	questions = Question.query.filter_by(to_user_id=current_user.id).filter(
+		Question.answer == None).all()
+	answer_form = AnswerForm()
+	if answer_form.validate_on_submit():
+		question = Question.query.filter_by(
+			id=request.form["question_id"]).first_or_404()
+		question.answer = answer_form.message.data
+		question.date_modified = datetime.utcnow()
+		db.session.commit()
+		return redirect(url_for('questions'))
+	return render_template("app/questions.html",
+						   form=answer_form,
+						   questions=questions)
+
+
+@app.route("/delete_question/<question_id>")
+@login_required
+@check_confirmed
+def delete_question(question_id):
+	question = Question.query.filter_by(id=question_id).first_or_404()
+	db.session.delete(question)
+	db.session.commit()
+	flash("Вопрос успешно удалён.")
+	return redirect(url_for('questions'))
 
 
 @app.route("/settings")
@@ -43,7 +100,7 @@ def login():
 	if login_form.validate_on_submit():
 		user = User.query.filter_by(username=login_form.username.data).first()
 		if user and check_password_hash(user.password,
-		                                login_form.password.data):
+										login_form.password.data):
 			login_user(user, remember=login_form.remember.data)
 			next_page = request.args.get('next')
 			if not next_page or url_parse(next_page).netloc != '':
@@ -61,7 +118,8 @@ def register():
 		return redirect(url_for('index'))
 	register_form = RegisterForm()
 	if register_form.validate_on_submit():
-		user = User(register_form.username.data, register_form.password.data, register_form.email.data)
+		user = User(register_form.username.data, register_form.password.data,
+					register_form.email.data)
 		db.session.add(user)
 		db.session.commit()
 		login_user(user)
@@ -76,23 +134,28 @@ def reset(token=None):
 		return redirect(url_for('index'))
 	new_pass_form = NewPassForm()
 	reset_form = ResetForm()
-	
+
 	if token:
 		if request.method == "GET":
 			user = User.query.filter_by(confirm_token=token).first()
 			if not user:
-				flash("Ссылка для сброса не действительна. Возможно вы обновили страницу.")
+				flash(
+					"Ссылка для сброса не действительна. Возможно вы обновили страницу."
+				)
 				return redirect(url_for('index'))
 			user.confirm_token = "confirmed"
 			db.session.commit()
 		if new_pass_form.validate_on_submit():
-			user = User.query.filter_by(old_token=request.form["hidden_token"]).first()
+			user = User.query.filter_by(
+				old_token=request.form["hidden_token"]).first()
 			user.set_password(new_pass_form.password.data)
 			db.session.commit()
 			flash("Пароль успешно сброшен.")
 			return redirect(url_for('login'))
 		else:
-			return render_template("auth/new_pass.html", form=new_pass_form, token=token)
+			return render_template("auth/new_pass.html",
+								   form=new_pass_form,
+								   token=token)
 
 	if reset_form.validate_on_submit():
 		user = User.query.filter_by(email=reset_form.email.data).first()
@@ -106,8 +169,8 @@ def reset(token=None):
 @app.route("/send_reset/<email>")
 def send_reset(email):
 	msg = Message("Сброс пароля.",
-	              recipients=[email],
-	              sender=app.config["MAIL_DEFAULT_SENDER"])
+				  recipients=[email],
+				  sender=app.config["MAIL_DEFAULT_SENDER"])
 	token = generate_id(12)
 	link = request.url_root + f"reset_password/{token}"
 	user = User.query.filter_by(email=email).first()
@@ -134,8 +197,8 @@ def send_confirm():
 	if current_user.confirmed == 1:
 		return redirect(url_for('index'))
 	msg = Message("Подтвердите ваш аккаунт.",
-	              recipients=[current_user.email],
-	              sender=app.config["MAIL_DEFAULT_SENDER"])
+				  recipients=[current_user.email],
+				  sender=app.config["MAIL_DEFAULT_SENDER"])
 	token = generate_id(32)
 	link = request.url_root + f"confirm/{token}"
 	current_user.confirm_token = token
