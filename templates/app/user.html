@@ -18,6 +18,9 @@
       {% if user and user.username != current_user.username %}
         <a class="dropdown-item" href="{{ url_for('user', username=current_user.username) }}">Профиль</a>
       {% endif %}
+      <a class="dropdown-item" href="{{ url_for('questions') }}">Вопросы 
+      <span class="badge badge-warning">{{ questions_amount }}</span>
+      </a>
       <a class="dropdown-item" href="{{ url_for('settings') }}">Настройки</a>
       <div class="dropdown-divider"></div>
       <a class="dropdown-item" href="{{ url_for('logout') }}">Выйти</a>
@@ -26,4 +29,116 @@
 {% endblock %}
 
 {% block content %}
+  <div class="col-md-7 col-lg-7 mx-auto pb-4">
+    <div class="card question py-2 mt-5 mb-3">
+      <div class="card-body">
+        <div class="text-center">
+          {% if user %}
+            <img src="{{ url_for('static', filename='avatars/' + user.avatar_id) }}" class="rounded fit-big p-3 mx-auto d-block" alt="avatar">
+            <h6 class="text-muted">@{{ user.username }}</h6>
+            <h5>{{ user.first_name }} {{ user.last_name }}</h5>
+
+            {% if user.bio %}
+              <p class="text-muted">{{ user.bio }}</p>
+            {% endif %}
+
+            {% if user.country %}
+              <span class="pr-1"><i class="fa fa-map-marker" aria-hidden="true"></i> {{ user.country }}, {{ user.city }}</span>
+            {% endif %}
+
+            {% if user.telegram %}
+              <span class="pr-1">
+                <i class="fa fa-paper-plane" aria-hidden="true"></i> 
+                <a class="text-body text-decoration-none" href="https://t.me/{{ user.telegram }}">{{ user.telegram }}</a>
+              </span>
+            {% endif %}
+
+            {% if user.instagram %}
+              <span class="pr-1">
+                <i class="fa fa-camera-retro" aria-hidden="true"></i> 
+                <a class="text-body text-decoration-none" href="https://instagram.com/{{ user.instagram }}">{{ user.instagram }}</a>
+              </span>
+            {% endif %}
+            
+            <p class="pt-2">
+              {% if not current_user.is_following(user) %}
+                <a href="{{ url_for('follow', username=user.username) }}" class="btn btn-sm btn-warning">Подписаться</a>
+              {% else %}
+                <a href="{{ url_for('unfollow', username=user.username) }}" class="btn btn-sm btn-outline-warning">Отписаться</a>
+              {% endif %}
+            </p>
+          {% else %}  
+            <img src="{{ url_for('static', filename='avatars/' + current_user.avatar_id) }}" class="rounded fit-big p-3 mx-auto d-block" alt="avatar">   
+            <h6 class="text-muted">@{{ current_user.username }}</h6>
+            <h5>{{ current_user.first_name }} {{ current_user.last_name }}</h5>
+
+            {% if current_user.bio %}
+            <p class="text-muted">{{ current_user.bio }}</p>
+            {% endif %}
+
+            {% if current_user.country %}
+              <span class="pr-1"><i class="fa fa-map-marker" aria-hidden="true"></i> {{ current_user.country }}, {{ current_user.city }}</span>
+            {% endif %}
+
+            {% if current_user.telegram %}
+              <span class="pr-1">
+                <i class="fa fa-paper-plane" aria-hidden="true"></i> 
+                <a class="text-body text-decoration-none" href="https://t.me/{{ current_user.telegram }}">{{ current_user.telegram }}</a>
+              </span>
+            {% endif %}
+
+            {% if current_user.instagram %}
+              <span class="pr-1">
+                <i class="fa fa-camera-retro" aria-hidden="true"></i> 
+                <a class="text-body text-decoration-none" href="https://instagram.com/{{ current_user.instagram }}">{{ current_user.instagram }}</a>
+              </span>
+            {% endif %}
+
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if user %}
+    <div class="col-sm-9 col-md-7 col-lg-7 mx-auto pb-3">
+      <div class="card question mb-3">
+        <div class="card-body">
+          <h5 class="pb-2">Задайте вопрос:</h5>
+          <form action="/user/{{ user.username }}" method="POST">
+            {{ form.hidden_tag() }}
+            {{ form.message(class="form-control mb-3", placeholder=form.message.label.text) }}
+            <span class="ml-4">
+            {{ form.anon(class="form-check-input float-left") }}
+            <label class="form-check-label" for="anon">{{ form.anon.label.text }}</label>
+            </span>
+            {{ form.submit(class="btn btn-success float-right") }}
+          </form>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  {% if questions %}
+    {% for question in questions %}
+      <div class="col-sm-9 col-md-7 col-lg-7 mx-auto py-4">
+        <div class="card question mb-3">
+          <div id="133228" class="card-body">
+            {% if not question.is_anonymous %}
+              <small ><a href="{{ url_for('user', username=question.author.username) }}" class="text-warning">@{{ question.author.username }}</a></small>
+            {% else %}
+              <small class="text-muted">Анонимно</small>
+            {% endif %}
+            <small class="text-muted float-right">{{ moment(question.date_created).format("L LT") }}</small>
+            <div class="card-text pt-1">{{ question.text }}</div>
+            <hr class="hr mt-4 mb-4">
+            <small class="text-muted float-right">{{ moment(question.date_modified).format("L LT") }}</small>
+            <div class="answer">{{ question.answer }}</div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <h4 class="text-center py-4">Здесь пока нет вопросов 😕</h4>
+  {% endif %}
 {% endblock %}
