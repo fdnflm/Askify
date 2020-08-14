@@ -81,7 +81,7 @@ class QuestionForm(FlaskForm):
 									max=140,
 									message="Максимальная длина 140 символов.")
 							])
-	anon = BooleanField("Анонимно")
+	anon = BooleanField("Анонимно", id="anon")
 	submit = SubmitField('Отправить')
 
 
