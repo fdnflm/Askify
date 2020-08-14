@@ -3,13 +3,19 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash
 
 
+followers = db.Table('followers',
+	db.Column('follower_id', db.Integer, db.ForeignKey('user.id')),
+	db.Column('followed_id', db.Integer, db.ForeignKey('user.id'))
+)
+
+
 class Base(db.Model):
 	__abstract__ = True
 	id = db.Column(db.Integer, primary_key=True)
 	date_created = db.Column(db.DateTime, default=db.func.current_timestamp())
 	date_modified = db.Column(db.DateTime,
-	                          default=db.func.current_timestamp(),
-	                          onupdate=db.func.current_timestamp())
+							  default=db.func.current_timestamp(),
+							  onupdate=db.func.current_timestamp())
 
 
 class User(UserMixin, Base):
@@ -32,6 +38,11 @@ class User(UserMixin, Base):
 	banned = db.Column(db.Integer(), default=0)
 	old_token = db.Column(db.String(64))
 	questions = db.relationship('Question', backref='author', lazy='dynamic')
+	followed = db.relationship(
+		'User', secondary=followers,
+		primaryjoin=("followers.c.follower_id == User.id"),
+		secondaryjoin=("followers.c.followed_id == User.id"),
+		backref=db.backref('followers', lazy='dynamic'), lazy='dynamic')
 
 	def __init__(self, username, password, first_name, last_name, email):
 		self.username = username
@@ -43,8 +54,29 @@ class User(UserMixin, Base):
 	def set_password(self, password):
 		self.password = generate_password_hash(password)
 
+	def get_questions(self):
+		return Question.query.filter_by(to_user_id=self.id).filter(
+						Question.answer != None).all()
+
+	def get_questions_amount(self):
+		return len(
+				Question.query.filter_by(to_user_id=self.id).filter(
+					Question.answer == None).all())
+
+	def follow(self, user):
+		if not self.is_following(user):
+			self.followed.append(user)
+
+	def unfollow(self, user):
+		if self.is_following(user):
+			self.followed.remove(user)
+
+	def is_following(self, user):
+		return self.followed.filter(
+			followers.c.followed_id == user.id).count() > 0
+
 	def __repr__(self):
-		return f"<User-{self.name}>"
+		return f"<User {self.username}>"
 
 
 class Question(Base):
@@ -56,7 +88,7 @@ class Question(Base):
 	is_anonymous = db.Column(db.Integer())
 
 	def __repr__(self):
-		return f"<Question-{self.id}>"
+		return f"<Question {self.id}>"
 
 
 @login_manager.user_loader

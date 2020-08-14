@@ -14,12 +14,10 @@ def index():
 	if current_user.is_authenticated:
 		if current_user.confirmed:
 			question_form = QuestionForm()
-			questions_amount = len(
-				Question.query.filter_by(to_user_id=current_user.id).filter(
-					Question.answer == None).all())
 			return render_template("app/user.html",
 								   form=question_form,
-								   questions_amount=questions_amount)
+								   questions_amount=current_user.get_questions_amount(),
+								   questions=reversed(current_user.get_questions()))
 		else:
 			return redirect(url_for('unconfirmed'))
 	return render_template("app/index.html")
@@ -43,16 +41,11 @@ def user(username):
 		db.session.commit()
 		flash(f'Вопрос отправлен пользователю @{username}.')
 		return redirect(url_for('user', username=username))
-	questions = Question.query.filter_by(to_user_id=user.id).filter(
-		Question.answer != None).all()
-	questions_amount = len(
-		Question.query.filter_by(to_user_id=current_user.id).filter(
-			Question.answer == None).all())
 	return render_template("app/user.html",
 						   user=user,
 						   form=question_form,
-						   questions=reversed(questions),
-						   questions_amount=questions_amount)
+						   questions=reversed(user.get_questions()),
+						   questions_amount=current_user.get_questions_amount())
 
 
 @app.route("/questions", methods=["GET", "POST"])
@@ -68,10 +61,38 @@ def questions():
 		question.answer = answer_form.message.data
 		question.date_modified = datetime.utcnow()
 		db.session.commit()
+		flash("Ответ был отправлен")
 		return redirect(url_for('questions'))
 	return render_template("app/questions.html",
 						   form=answer_form,
 						   questions=questions)
+
+
+@app.route("/follow/<username>")
+@login_required
+@check_confirmed
+def follow(username):
+	user = User.query.filter_by(username=username).first_or_404()
+	if user == current_user:
+		flash("You cannot follow yourself")
+		return redirect(url_for('user', username=username))
+	current_user.follow(user)
+	db.session.commit()
+	flash(f"You are following @{username} now 🎉")
+	return redirect(url_for('user', username=username))
+
+
+@app.route('/unfollow/<username>')
+@login_required
+def unfollow(username):
+	user = User.query.filter_by(username=username).first_or_404()
+	if user == current_user:
+		flash("You can't unfollow yourself")
+		return redirect(url_for('user', username=username))
+	current_user.unfollow(user)
+	db.session.commit()
+	flash(f"You are unfollowed @{username} 🙁")
+	return redirect(url_for('user', username=username))
 
 
 @app.route("/delete_question/<question_id>")
