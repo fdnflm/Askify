@@ -37,7 +37,6 @@ class User(UserMixin, Base):
 	confirm_token = db.Column(db.String(64), unique=True)
 	banned = db.Column(db.Integer(), default=0)
 	old_token = db.Column(db.String(64))
-	questions = db.relationship('Question', backref='author', lazy='dynamic')
 	followed = db.relationship(
 		'User', secondary=followers,
 		primaryjoin=("followers.c.follower_id == User.id"),
@@ -56,7 +55,8 @@ class User(UserMixin, Base):
 
 	def get_questions(self):
 		return Question.query.filter_by(to_user_id=self.id).filter(
-						Question.answer != None).all()
+						Question.answer != None).order_by(
+					Question.date_created.desc()).all()
 
 	def get_questions_amount(self):
 		return len(
@@ -74,6 +74,12 @@ class User(UserMixin, Base):
 	def is_following(self, user):
 		return self.followed.filter(
 			followers.c.followed_id == user.id).count() > 0
+		
+	def followed_questions(self):
+		return Question.query.join(
+			followers, (followers.c.followed_id == Question.to_user_id)).filter(
+				followers.c.follower_id == self.id).order_by(
+					Question.date_created.desc()).all()
 
 	def __repr__(self):
 		return f"<User {self.username}>"
@@ -84,7 +90,10 @@ class Question(Base):
 	text = db.Column(db.String(140))
 	answer = db.Column(db.String(512))
 	user_id = db.Column(db.Integer(), db.ForeignKey('user.id'))
-	to_user_id = db.Column(db.Integer())
+	to_user_id = db.Column(db.Integer(), db.ForeignKey('user.id'))
+	main_user = db.relationship(User, foreign_keys=[user_id],
+								  backref='questions')
+	second_user = db.relationship(User, foreign_keys=[to_user_id])
 	is_anonymous = db.Column(db.Integer())
 
 	def __repr__(self):
@@ -98,7 +107,12 @@ def load_user(user_id):
 
 def init():
 	db.create_all()
-
+	admin = User("admin", "password", "Абдул", "Алиев", "test@mail.com")
+	admin.confirmed = 1
+	user = User("user", "password", "Пётр", "Первый", "123@mail.com")
+	user.confirmed = 1
+	db.session.add_all([admin, user])
+	db.session.commit()
 
 if __name__ == "__main__":
 	init()

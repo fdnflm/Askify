@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Лента{% endblock %}
+
+{% block nav %}
+  <ul class="navbar-nav mr-auto">
+    <div class="nav-item">
+      <a href="{{ url_for('feed') }}" class="nav-link active">Лента</a>
+    </div>
+  </ul>
+  <div class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle text-white" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    <span class="mr-2">{{ current_user.username }}</span><img class="rounded-circle fit-small" src="{{ url_for('static', filename='avatars/' + current_user.avatar_id) }}" alt="">
+    </a>
+    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+      <a class="dropdown-item" href="{{ url_for('user', username=current_user.username) }}">Профиль</a>
+      <a class="dropdown-item" href="{{ url_for('questions') }}">Вопросы 
+      <span class="badge badge-warning">{{ questions_amount }}</span>
+      </a>
+      <a class="dropdown-item" href="{{ url_for('settings') }}">Настройки</a>
+      <div class="dropdown-divider"></div>
+      <a class="dropdown-item" href="{{ url_for('logout') }}">Выйти</a>
+    </div>
+  </div>
+{% endblock %}
+
+{% block content %}
+  <div class="col-sm-9 col-md-7 col-lg-7 mx-auto py-4">
+    {% if questions %}
+      {% for question in questions %}
+        <div class="card question mb-3">
+          <div id="133228" class="card-body">
+            <div class="card-title">
+              {% if not question.is_anonymous %}
+                <small ><a href="{{ url_for('user', username=question.second_user.username) }}" class="text-warning">@{{ question.second_user.username }}</a> ответил <a href="{{ url_for('user', username=question.main_user.username) }}" class="text-warning">@{{ question.main_user.username }}</a></small>
+              {% else %}
+                <small class="text-muted"><a href="{{ url_for('user', username=question.second_user.username) }}" class="text-warning">@{{ question.second_user.username }}</a> ответил анониму</small>
+              {% endif %}
+            </div>
+            <small class="text-muted float-right">{{ moment(question.date_created).format("L LT") }}</small>
+            <div class="card-text pt-1">{{ question.text }}</div>
+            <hr class="hr mt-4 mb-4">
+            <small class="text-muted float-right">{{ moment(question.date_modified).format("L LT") }}</small>
+            <div class="answer">{{ question.answer }}</div>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <h4 class="text-center py-4">Подписывайтесь на пользователей, чтобы видеть их ответы на вопросы 🙈</h4>
+    {% endif %}
+  </div>
+{% endblock %}
