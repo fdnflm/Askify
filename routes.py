@@ -14,10 +14,12 @@ def index():
 	if current_user.is_authenticated:
 		if current_user.confirmed:
 			question_form = QuestionForm()
+			info = current_user.country or current_user.instagram or current_user.telegram 
 			return render_template("app/user.html",
 								   form=question_form,
 								   questions_amount=current_user.get_questions_amount(),
-								   questions=reversed(current_user.get_questions()))
+								   questions=current_user.get_questions(),
+								   info=info)
 		else:
 			return redirect(url_for('unconfirmed'))
 	return render_template("app/index.html")
@@ -30,7 +32,8 @@ def user(username):
 	if current_user.username == username:
 		return redirect(url_for('index'))
 	question_form = QuestionForm()
-	user = User.query.filter_by(username=username).first_or_404()
+	user = User.query.filter_by(username=username.lower()).first_or_404()
+	info = user.country or user.instagram or user.telegram 
 	if question_form.validate_on_submit():
 		q = Question()
 		q.text = question_form.message.data
@@ -44,7 +47,17 @@ def user(username):
 	return render_template("app/user.html",
 						   user=user,
 						   form=question_form,
-						   questions=reversed(user.get_questions()),
+						   questions=user.get_questions(),
+						   questions_amount=current_user.get_questions_amount(),
+						   info=info)
+
+
+@app.route("/feed")
+@login_required
+@check_confirmed
+def feed():
+	return render_template("app/feed.html",
+						   questions=current_user.followed_questions(),
 						   questions_amount=current_user.get_questions_amount())
 
 
@@ -139,7 +152,8 @@ def register():
 		return redirect(url_for('index'))
 	register_form = RegisterForm()
 	if register_form.validate_on_submit():
-		user = User(register_form.username.data, register_form.password.data,
+		user = User(register_form.username.data, register_form.password.data, 
+					register_form.first_name.data, register_form.last_name.data,
 					register_form.email.data)
 		db.session.add(user)
 		db.session.commit()
@@ -245,6 +259,12 @@ def confirm(token):
 def logout():
 	logout_user()
 	return redirect("/")
+
+
+@app.before_request
+def before_app_request():
+	if current_user.is_authenticated and current_user.banned == 1:
+		return render_template("errors/banned.html")
 
 
 @app.errorhandler(404)
