@@ -3,7 +3,11 @@
 {% block title %}Вопросы{% endblock %}
 
 {% block nav %}
-  <ul class="navbar-nav mr-auto"></ul>
+  <ul class="navbar-nav mr-auto">
+    <div class="nav-item">
+      <a href="{{ url_for('feed') }}" class="nav-link">Лента</a>
+    </div>
+  </ul>
   <div class="nav-item dropdown">
     <a class="nav-link dropdown-toggle text-white" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
     <span class="mr-2">{{ current_user.username }}</span><img class="rounded-circle fit-small" src="{{ url_for('static', filename='avatars/' + current_user.avatar_id) }}" alt="">
@@ -23,14 +27,16 @@
     {% for question in questions %}
       <div class="card question py-2 mt-5 mb-3">
         <div class="card-body">
-          {% if not question.is_anonymous %}
-            <small ><a href="{{ url_for('user', username=question.author.username) }}" class="text-warning">@{{ question.author.username }}</a></small>
-          {% else %}
-            <small class="text-muted">Анонимно</small>
-          {% endif %}
-          <a type="button" class="close float-right" data-dismiss="modal" title="Удалить" href="{{ url_for('delete_question', question_id=question.id) }}">
-            <span aria-hidden="true">&times;</span>
-          </a>
+          <div class="card-title">
+            {% if not question.is_anonymous %}
+              <small ><a href="{{ url_for('user', username=question.main_user.username) }}" class="text-warning">@{{ question.main_user.username }}</a></small>
+            {% else %}
+              <small class="text-muted">Анонимно</small>
+            {% endif %}
+            <a type="button" class="close float-right" data-dismiss="modal" title="Удалить" href="{{ url_for('delete_question', question_id=question.id) }}">
+              <span aria-hidden="true">&times;</span>
+            </a>
+          </div>
           <div class="card-text pt-1">{{ question.text }}</div>
           <hr class="hr mt-4 mb-4">
           <form action="/questions" method="POST">

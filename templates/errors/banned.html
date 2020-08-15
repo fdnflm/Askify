@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Блокировка{% endblock %}
+
+{% block content %}
+  <div class="text-center pt-5">
+    <h2>Ваш аккаунт заблокирован.</h2>
+	<h5 class="pb-2">Если у вас возникли вопросы напишите на почту: fadinflame@gmail.com</h5>
+    <a href="mailto:fadinflame@gmail.com?subject=Блокировка пользователя {{ current_user.username }}" class="btn btn-dark">Написать письмо</a>
+    <a href="{{ url_for('logout') }}" class="btn btn-outline-secondary">Выйти</a>
+  </div>
+{% endblock %}

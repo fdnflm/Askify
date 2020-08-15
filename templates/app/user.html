@@ -9,7 +9,11 @@
 {% endblock %}
 
 {% block nav %}
-  <ul class="navbar-nav mr-auto"></ul>
+  <ul class="navbar-nav mr-auto">
+    <div class="nav-item">
+      <a href="{{ url_for('feed') }}" class="nav-link">Лента</a>
+    </div>
+  </ul>
   <div class="nav-item dropdown">
     <a class="nav-link dropdown-toggle text-white" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
     <span class="mr-2">{{ current_user.username }}</span><img class="rounded-circle fit-small" src="{{ url_for('static', filename='avatars/' + current_user.avatar_id) }}" alt="">
@@ -39,34 +43,44 @@
             <h5>{{ user.first_name }} {{ user.last_name }}</h5>
 
             {% if user.bio %}
-              <p class="text-muted">{{ user.bio }}</p>
+              <h6 class="text-muted">{{ user.bio }}</h6>
+            {% endif %}
+
+            {% if info %}
+              <hr class="w-50">
             {% endif %}
 
             {% if user.country %}
-              <span class="pr-1"><i class="fa fa-map-marker" aria-hidden="true"></i> {{ user.country }}, {{ user.city }}</span>
+              <span class="pr-2"><i class="fa fa-map-marker" aria-hidden="true"></i> {{ user.country }}, {{ user.city }}</span>
+              <br>
             {% endif %}
 
             {% if user.telegram %}
-              <span class="pr-1">
+              <span class="pr-2">
                 <i class="fa fa-paper-plane" aria-hidden="true"></i> 
                 <a class="text-body text-decoration-none" href="https://t.me/{{ user.telegram }}">{{ user.telegram }}</a>
               </span>
+              <br>
             {% endif %}
 
             {% if user.instagram %}
-              <span class="pr-1">
+              <span class="pr-2">
                 <i class="fa fa-camera-retro" aria-hidden="true"></i> 
                 <a class="text-body text-decoration-none" href="https://instagram.com/{{ user.instagram }}">{{ user.instagram }}</a>
               </span>
             {% endif %}
-            
-            <p class="pt-2">
+
+            {% if info %}
+              <hr class="w-50">
+            {% endif %}
+
+            <div class="pt-3">
               {% if not current_user.is_following(user) %}
                 <a href="{{ url_for('follow', username=user.username) }}" class="btn btn-sm btn-warning">Подписаться</a>
               {% else %}
                 <a href="{{ url_for('unfollow', username=user.username) }}" class="btn btn-sm btn-outline-warning">Отписаться</a>
               {% endif %}
-            </p>
+            </div>
           {% else %}  
             <img src="{{ url_for('static', filename='avatars/' + current_user.avatar_id) }}" class="rounded fit-big p-3 mx-auto d-block" alt="avatar">   
             <h6 class="text-muted">@{{ current_user.username }}</h6>
@@ -76,8 +90,13 @@
             <p class="text-muted">{{ current_user.bio }}</p>
             {% endif %}
 
+            {% if info %}
+              <hr class="w-50">
+            {% endif %}
+
             {% if current_user.country %}
               <span class="pr-1"><i class="fa fa-map-marker" aria-hidden="true"></i> {{ current_user.country }}, {{ current_user.city }}</span>
+              <br>
             {% endif %}
 
             {% if current_user.telegram %}
@@ -85,6 +104,7 @@
                 <i class="fa fa-paper-plane" aria-hidden="true"></i> 
                 <a class="text-body text-decoration-none" href="https://t.me/{{ current_user.telegram }}">{{ current_user.telegram }}</a>
               </span>
+              <br>
             {% endif %}
 
             {% if current_user.instagram %}
@@ -92,6 +112,10 @@
                 <i class="fa fa-camera-retro" aria-hidden="true"></i> 
                 <a class="text-body text-decoration-none" href="https://instagram.com/{{ current_user.instagram }}">{{ current_user.instagram }}</a>
               </span>
+            {% endif %}
+
+            {% if info %}
+              <hr class="w-50">
             {% endif %}
 
           {% endif %}
@@ -124,11 +148,13 @@
       <div class="col-sm-9 col-md-7 col-lg-7 mx-auto py-4">
         <div class="card question mb-3">
           <div id="133228" class="card-body">
-            {% if not question.is_anonymous %}
-              <small ><a href="{{ url_for('user', username=question.author.username) }}" class="text-warning">@{{ question.author.username }}</a></small>
-            {% else %}
-              <small class="text-muted">Анонимно</small>
-            {% endif %}
+            <div class="card-title">
+              {% if not question.is_anonymous %}
+                <small ><a href="{{ url_for('user', username=question.main_user.username) }}" class="text-warning">@{{ question.main_user.username }}</a></small>
+              {% else %}
+                <small class="text-muted">Анонимно</small>
+              {% endif %}
+            </div>
             <small class="text-muted float-right">{{ moment(question.date_created).format("L LT") }}</small>
             <div class="card-text pt-1">{{ question.text }}</div>
             <hr class="hr mt-4 mb-4">

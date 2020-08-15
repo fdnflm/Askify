@@ -28,6 +28,20 @@
             <div class="invalid-feedback">Пожалуйста, введите верный email.</div>
           </div>
           <div class="form-group">
+            {{ form.first_name(class="form-control py-2", placeholder=form.first_name.label.text) }}
+            {% for error in form.first_name.errors %}
+              <p class="text-danger">{{ error }}</p>
+            {% endfor %}
+            <div class="invalid-feedback">Пожалуйста, введите верно имя.</div>
+          </div>
+          <div class="form-group">
+            {{ form.last_name(class="form-control py-2", placeholder=form.last_name.label.text) }}
+            {% for error in form.last_name.errors %}
+              <p class="text-danger">{{ error }}</p>
+            {% endfor %}
+            <div class="invalid-feedback">Пожалуйста, введите верно фамилию.</div>
+          </div>
+          <div class="form-group">
             {{ form.username(class="form-control py-2", placeholder=form.username.label.text) }}
             {% for error in form.username.errors %}
               <p class="text-danger">{{ error }}</p>
