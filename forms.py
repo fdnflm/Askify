@@ -16,7 +16,11 @@ class RegisterForm(FlaskForm):
 							DataRequired(),
 							Email(message="Введите верный email адрес")
 						])
-	username = StringField("Имя пользователя", validators=[DataRequired()])
+	username = StringField("Имя пользователя", 
+							validators=[
+								DataRequired(), 
+								Length(min=4, max=16,
+								message="Длина имени должна быть меньше 17 символов.")])
 	password = PasswordField(
 		"Пароль",
 		validators=[
