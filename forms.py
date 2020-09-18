@@ -17,20 +17,6 @@ class RegisterForm(FlaskForm):
 							Email(message="Введите верный email адрес")
 						])
 	username = StringField("Имя пользователя", validators=[DataRequired()])
-	first_name = StringField(
-		"Имя",
-		validators=[
-			DataRequired(),
-			Length(max=32,
-				   message="Длина имени не должна превышать 32 символа.")
-		])
-	last_name = StringField(
-		"Фамилия",
-		validators=[
-			DataRequired(),
-			Length(max=32,
-				   message="Длина фамилии не должна превышать 32 символа.")
-		])
 	password = PasswordField(
 		"Пароль",
 		validators=[
