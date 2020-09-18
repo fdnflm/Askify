@@ -4,36 +4,45 @@ from flask_login import current_user, login_user, login_required, logout_user
 from models import User, Question
 from forms import LoginForm, RegisterForm, ResetForm, NewPassForm, QuestionForm, AnswerForm
 from werkzeug.security import check_password_hash
+from werkzeug.urls import url_parse
 from flask_mail import Message
 from misc import generate_id, check_confirmed
 from datetime import datetime
+from sqlalchemy.exc import IntegrityError
 
 
 @app.route("/")
 def index():
 	if current_user.is_authenticated:
 		if current_user.confirmed:
-			question_form = QuestionForm()
-			info = current_user.country or current_user.instagram or current_user.telegram 
-			return render_template("app/user.html",
-								   form=question_form,
-								   questions_amount=current_user.get_questions_amount(),
-								   questions=current_user.get_questions(),
-								   info=info)
+			return redirect(url_for('feed'))
 		else:
 			return redirect(url_for('unconfirmed'))
 	return render_template("app/index.html")
 
 
 @app.route("/user/<username>", methods=["GET", "POST"])
+@app.route("/user/<username>/<list_type>")
 @login_required
 @check_confirmed
-def user(username):
-	if current_user.username == username:
-		return redirect(url_for('index'))
+def user(username, list_type=None):
 	question_form = QuestionForm()
 	user = User.query.filter_by(username=username.lower()).first_or_404()
-	info = user.country or user.instagram or user.telegram 
+	info = user.country or user.instagram or user.telegram
+	followed_users = user.followed.all()
+	followers = user.get_followers()
+	if list_type == "followed":
+		return render_template("app/followers.html",
+								users=followed_users,
+								view_user=user,
+								questions_amount=current_user.get_questions_amount(),
+								list_type=list_type)
+	elif list_type == "followers":
+		return render_template("app/followers.html",
+								users=followers,
+								view_user=user,
+								questions_amount=current_user.get_questions_amount(),
+								list_type=list_type)
 	if question_form.validate_on_submit():
 		q = Question()
 		q.text = question_form.message.data
@@ -49,7 +58,9 @@ def user(username):
 						   form=question_form,
 						   questions=user.get_questions(),
 						   questions_amount=current_user.get_questions_amount(),
-						   info=info)
+						   info=info,
+						   followers_amount=len(followers),
+						   followed_amount=len(followed_users))
 
 
 @app.route("/feed")
@@ -57,16 +68,25 @@ def user(username):
 @check_confirmed
 def feed():
 	return render_template("app/feed.html",
-						   questions=current_user.followed_questions(),
+						   questions=current_user.followed_questions()
+						   + current_user.get_questions(),
 						   questions_amount=current_user.get_questions_amount())
+
+
+@app.route("/subscriptions")
+@login_required
+@check_confirmed
+def subscriptions():
+	return render_template("app/subscriptions.html",
+							users=current_user.followed.all(),
+							questions_amount=current_user.get_questions_amount())
 
 
 @app.route("/questions", methods=["GET", "POST"])
 @login_required
 @check_confirmed
 def questions():
-	questions = Question.query.filter_by(to_user_id=current_user.id).filter(
-		Question.answer == None).all()
+	questions = current_user.get_questions(answered=False)
 	answer_form = AnswerForm()
 	if answer_form.validate_on_submit():
 		question = Question.query.filter_by(
@@ -87,12 +107,18 @@ def questions():
 def follow(username):
 	user = User.query.filter_by(username=username).first_or_404()
 	if user == current_user:
-		flash("You cannot follow yourself")
+		flash("Вы не можете подписаться на себя")
 		return redirect(url_for('user', username=username))
-	current_user.follow(user)
-	db.session.commit()
-	flash(f"You are following @{username} now 🎉")
-	return redirect(url_for('user', username=username))
+	if current_user.is_following(user):
+		flash("Вы уже подписаны на этого пользователя")
+	else:
+		current_user.follow(user)
+		db.session.commit()
+		flash(f"Вы подписаны на @{username} теперь 🎉")
+	next_page = request.referrer
+	if not next_page:
+		next_page = url_for('user', username=username)
+	return redirect(next_page)
 
 
 @app.route('/unfollow/<username>')
@@ -100,12 +126,18 @@ def follow(username):
 def unfollow(username):
 	user = User.query.filter_by(username=username).first_or_404()
 	if user == current_user:
-		flash("You can't unfollow yourself")
+		flash("Вы не можете отписаться от себя")
 		return redirect(url_for('user', username=username))
-	current_user.unfollow(user)
-	db.session.commit()
-	flash(f"You are unfollowed @{username} 🙁")
-	return redirect(url_for('user', username=username))
+	if not current_user.is_following(user):
+		flash("Вы уже отписались от этого пользователя")
+	else:
+		current_user.unfollow(user)
+		db.session.commit()
+		flash(f"Вы отписались от @{username} 🙁")
+	next_page = request.referrer
+	if not next_page:
+		next_page = url_for('user', username=username)
+	return redirect(next_page)
 
 
 @app.route("/delete_question/<question_id>")
@@ -113,9 +145,12 @@ def unfollow(username):
 @check_confirmed
 def delete_question(question_id):
 	question = Question.query.filter_by(id=question_id).first_or_404()
-	db.session.delete(question)
-	db.session.commit()
-	flash("Вопрос успешно удалён.")
+	if question.to_user_id == current_user.id:
+		db.session.delete(question)
+		db.session.commit()
+		flash("Вопрос успешно удалён.")
+	else:
+		abort(403)
 	return redirect(url_for('questions'))
 
 
@@ -152,13 +187,16 @@ def register():
 		return redirect(url_for('index'))
 	register_form = RegisterForm()
 	if register_form.validate_on_submit():
-		user = User(register_form.username.data, register_form.password.data, 
-					register_form.first_name.data, register_form.last_name.data,
-					register_form.email.data)
-		db.session.add(user)
-		db.session.commit()
-		login_user(user)
-		return redirect(url_for('send_confirm'))
+		try:
+			user = User(register_form.username.data,
+						register_form.password.data, 
+						register_form.email.data)
+			db.session.add(user)
+			db.session.commit()
+			login_user(user)
+			return redirect(url_for('send_confirm'))
+		except IntegrityError:
+			flash("Пользователь с таким никнеймом или почтой уже существует")
 	return render_template("auth/register.html", form=register_form)
 
 
@@ -167,6 +205,7 @@ def register():
 def reset(token=None):
 	if current_user.is_authenticated:
 		return redirect(url_for('index'))
+		
 	new_pass_form = NewPassForm()
 	reset_form = ResetForm()
 
@@ -182,7 +221,7 @@ def reset(token=None):
 			db.session.commit()
 		if new_pass_form.validate_on_submit():
 			user = User.query.filter_by(
-				old_token=request.form["hidden_token"]).first()
+				old_token=request.form["hidden_token"]).first_or_404()
 			user.set_password(new_pass_form.password.data)
 			db.session.commit()
 			flash("Пароль успешно сброшен.")
@@ -212,7 +251,11 @@ def send_reset(email):
 	user.confirm_token = token
 	user.old_token = token
 	db.session.commit()
-	msg.body = f"Привет, {user.username}!\nДля сброса пароля перейдите по ссылке ниже. Если вы не запрашивали сброс пароля, проигнорируйте это письмо.\n{link}"
+	msg.html = render_template("email.html",
+								username=user.username,
+								link=link,
+								action="Сбросить пароль",
+								reset=1)
 	mail.send(msg)
 	flash('Для сброса пароля, перейдите по ссылке в письме.')
 	return redirect(url_for('index'))
@@ -238,7 +281,10 @@ def send_confirm():
 	link = request.url_root + f"confirm/{token}"
 	current_user.confirm_token = token
 	db.session.commit()
-	msg.body = f"Привет, {current_user.username}!\nВы недавно зарегистрировались в нашем блоге! Чтобы активировать аккаунт, перейдите по ссылке ниже\n{link}"
+	msg.html = render_template("email.html",
+								username=current_user.username,
+								link=link,
+								action="Подтвердить аккаунт")
 	mail.send(msg)
 	return redirect("/unconfirmed")
 
@@ -263,7 +309,7 @@ def logout():
 
 @app.before_request
 def before_app_request():
-	if current_user.is_authenticated and current_user.banned == 1:
+	if current_user.is_authenticated and current_user.banned == 1 and not request.url.endswith("/logout"):
 		return render_template("errors/banned.html")
 
 
