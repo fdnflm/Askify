@@ -19,8 +19,7 @@ class Base(db.Model):
 
 
 class User(UserMixin, Base):
-	__tablename__ = 'user'
-	username = db.Column(db.String(32), unique=True, index=True)
+	username = db.Column(db.String(16), unique=True, index=True)
 	first_name = db.Column(db.String(32))
 	last_name = db.Column(db.String(32))
 	email = db.Column(db.String(64), unique=True, index=True)
@@ -34,7 +33,7 @@ class User(UserMixin, Base):
 	twitter = db.Column(db.String(32))
 	role = db.Column(db.Integer(), default=0)
 	confirmed = db.Column(db.Integer(), default=0)
-	confirm_token = db.Column(db.String(64), unique=True)
+	confirm_token = db.Column(db.String(64))
 	banned = db.Column(db.Integer(), default=0)
 	old_token = db.Column(db.String(64))
 	followed = db.relationship(
@@ -43,25 +42,30 @@ class User(UserMixin, Base):
 		secondaryjoin=("followers.c.followed_id == User.id"),
 		backref=db.backref('followers', lazy='dynamic'), lazy='dynamic')
 
-	def __init__(self, username, password, first_name, last_name, email):
+	def __init__(self, username, password, email):
 		self.username = username
-		self.first_name = first_name
-		self.last_name = last_name
 		self.password = generate_password_hash(password)
 		self.email = email
 
 	def set_password(self, password):
 		self.password = generate_password_hash(password)
 
-	def get_questions(self):
+	def get_questions(self, answered=True):
 		return Question.query.filter_by(to_user_id=self.id).filter(
-						Question.answer != None).order_by(
+						Question.answer != None if answered
+						else Question.answer == None).order_by(
 					Question.date_created.desc()).all()
 
 	def get_questions_amount(self):
 		return len(
 				Question.query.filter_by(to_user_id=self.id).filter(
 					Question.answer == None).all())
+				
+	def get_followers(self):
+		return self.followers.filter(followers.c.followed_id == self.id).all()
+
+	def get_followed(self):
+		return self.followed.all()
 
 	def follow(self, user):
 		if not self.is_following(user):
@@ -78,7 +82,7 @@ class User(UserMixin, Base):
 	def followed_questions(self):
 		return Question.query.join(
 			followers, (followers.c.followed_id == Question.to_user_id)).filter(
-				followers.c.follower_id == self.id).order_by(
+				followers.c.follower_id == self.id).filter(Question.answer != None).order_by(
 					Question.date_created.desc()).all()
 
 	def __repr__(self):
@@ -107,9 +111,9 @@ def load_user(user_id):
 
 def init():
 	db.create_all()
-	admin = User("admin", "password", "Абдул", "Алиев", "test@mail.com")
+	admin = User("admin", "password", "test@mail.com")
 	admin.confirmed = 1
-	user = User("user", "password", "Пётр", "Первый", "123@mail.com")
+	user = User("user", "password", "123@mail.com")
 	user.confirmed = 1
 	db.session.add_all([admin, user])
 	db.session.commit()
