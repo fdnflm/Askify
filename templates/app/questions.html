@@ -4,8 +4,14 @@
 
 {% block nav %}
   <ul class="navbar-nav mr-auto">
-    <div class="nav-item">
-      <a href="{{ url_for('feed') }}" class="nav-link">Лента</a>
+    <div class="nav-item dropdown">
+      <a class="nav-link dropdown-toggle text-white" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        Меню 📁
+      </a>
+      <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+        <a class="dropdown-item" href="{{ url_for('feed') }}">Лента</a>
+        <a class="dropdown-item" href="{{ url_for('subscriptions') }}">Подписки</a>
+      </div>
     </div>
   </ul>
   <div class="nav-item dropdown">
@@ -29,7 +35,7 @@
         <div class="card-body">
           <div class="card-title">
             {% if not question.is_anonymous %}
-              <small ><a href="{{ url_for('user', username=question.main_user.username) }}" class="text-warning">@{{ question.main_user.username }}</a></small>
+              <small ><a href="{{ url_for('user', username=question.main_user.username) }}" class="text-decoration-none text-warning">@{{ question.main_user.username }}</a></small>
             {% else %}
               <small class="text-muted">Анонимно</small>
             {% endif %}

@@ -10,8 +10,14 @@
 
 {% block nav %}
   <ul class="navbar-nav mr-auto">
-    <div class="nav-item">
-      <a href="{{ url_for('feed') }}" class="nav-link">Лента</a>
+    <div class="nav-item dropdown">
+      <a class="nav-link dropdown-toggle text-white" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        Меню 📁
+      </a>
+      <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+        <a class="dropdown-item" href="{{ url_for('feed') }}">Лента</a>
+        <a class="dropdown-item" href="{{ url_for('subscriptions') }}">Подписки</a>
+      </div>
     </div>
   </ul>
   <div class="nav-item dropdown">
@@ -22,8 +28,10 @@
       {% if user and user.username != current_user.username %}
         <a class="dropdown-item" href="{{ url_for('user', username=current_user.username) }}">Профиль</a>
       {% endif %}
-      <a class="dropdown-item" href="{{ url_for('questions') }}">Вопросы 
-      <span class="badge badge-warning">{{ questions_amount }}</span>
+      <a class="dropdown-item" href="{{ url_for('questions') }}">Вопросы
+      {% if questions_amount > 0 %}
+        <span class="badge badge-warning">{{ questions_amount }}</span>
+      {% endif %}
       </a>
       <a class="dropdown-item" href="{{ url_for('settings') }}">Настройки</a>
       <div class="dropdown-divider"></div>
@@ -40,7 +48,14 @@
           {% if user %}
             <img src="{{ url_for('static', filename='avatars/' + user.avatar_id) }}" class="rounded fit-big p-3 mx-auto d-block" alt="avatar">
             <h6 class="text-muted">@{{ user.username }}</h6>
-            <h5>{{ user.first_name }} {{ user.last_name }}</h5>
+
+            {% if user.first_name %}
+              <h5>{{ user.first_name }} </h5>
+            {% endif %}
+
+            {% if user.last_name %} 
+              <h5>{{ user.last_name }}</h5>
+            {% endif %}
 
             {% if user.bio %}
               <h6 class="text-muted">{{ user.bio }}</h6>
@@ -69,11 +84,18 @@
                 <a class="text-body text-decoration-none" href="https://instagram.com/{{ user.instagram }}">{{ user.instagram }}</a>
               </span>
             {% endif %}
+            
+            <div class="">
+              <a href="{{ url_for('user', username=user.username, list_type='followers') }}" class="text-body text-decoration-none">Подписчики: {{ followers_amount }}</a>
+               | 
+              <a href="{{ url_for('user', username=user.username, list_type='followed') }}" class="text-body text-decoration-none">Подписки: {{ followed_amount }}</a>
+            </div>
 
             {% if info %}
               <hr class="w-50">
             {% endif %}
-
+            
+            {% if current_user != user %}
             <div class="pt-3">
               {% if not current_user.is_following(user) %}
                 <a href="{{ url_for('follow', username=user.username) }}" class="btn btn-sm btn-warning">Подписаться</a>
@@ -81,41 +103,6 @@
                 <a href="{{ url_for('unfollow', username=user.username) }}" class="btn btn-sm btn-outline-warning">Отписаться</a>
               {% endif %}
             </div>
-          {% else %}  
-            <img src="{{ url_for('static', filename='avatars/' + current_user.avatar_id) }}" class="rounded fit-big p-3 mx-auto d-block" alt="avatar">   
-            <h6 class="text-muted">@{{ current_user.username }}</h6>
-            <h5>{{ current_user.first_name }} {{ current_user.last_name }}</h5>
-
-            {% if current_user.bio %}
-            <p class="text-muted">{{ current_user.bio }}</p>
-            {% endif %}
-
-            {% if info %}
-              <hr class="w-50">
-            {% endif %}
-
-            {% if current_user.country %}
-              <span class="pr-1"><i class="fa fa-map-marker" aria-hidden="true"></i> {{ current_user.country }}, {{ current_user.city }}</span>
-              <br>
-            {% endif %}
-
-            {% if current_user.telegram %}
-              <span class="pr-1">
-                <i class="fa fa-paper-plane" aria-hidden="true"></i> 
-                <a class="text-body text-decoration-none" href="https://t.me/{{ current_user.telegram }}">{{ current_user.telegram }}</a>
-              </span>
-              <br>
-            {% endif %}
-
-            {% if current_user.instagram %}
-              <span class="pr-1">
-                <i class="fa fa-camera-retro" aria-hidden="true"></i> 
-                <a class="text-body text-decoration-none" href="https://instagram.com/{{ current_user.instagram }}">{{ current_user.instagram }}</a>
-              </span>
-            {% endif %}
-
-            {% if info %}
-              <hr class="w-50">
             {% endif %}
 
           {% endif %}
@@ -124,13 +111,16 @@
     </div>
   </div>
 
-  {% if user %}
+  {% if user != current_user %}
     <div class="col-sm-9 col-md-7 col-lg-7 mx-auto pb-3">
       <div class="card question mb-3">
         <div class="card-body">
           <h5 class="pb-2">Задайте вопрос:</h5>
           <form action="/user/{{ user.username }}" method="POST">
             {{ form.hidden_tag() }}
+            {% for error in form.message.errors %}
+              <p class="text-danger">{{ error }}</p>
+            {% endfor %}
             {{ form.message(class="form-control mb-3", placeholder=form.message.label.text) }}
             <span class="ml-4">
             {{ form.anon(class="form-check-input float-left") }}
@@ -147,10 +137,10 @@
     {% for question in questions %}
       <div class="col-sm-9 col-md-7 col-lg-7 mx-auto py-4">
         <div class="card question mb-3">
-          <div id="133228" class="card-body">
+          <div class="card-body">
             <div class="card-title">
               {% if not question.is_anonymous %}
-                <small ><a href="{{ url_for('user', username=question.main_user.username) }}" class="text-warning">@{{ question.main_user.username }}</a></small>
+                <small ><a href="{{ url_for('user', username=question.main_user.username) }}" class="text-decoration-none text-warning">@{{ question.main_user.username }}</a> задал вопрос</small>
               {% else %}
                 <small class="text-muted">Анонимно</small>
               {% endif %}

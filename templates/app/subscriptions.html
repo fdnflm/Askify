@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Лента{% endblock %}
+{% block title %}Подписки{% endblock %}
 
 {% block nav %}
   <ul class="navbar-nav mr-auto">
@@ -9,8 +9,8 @@
         Меню 📁
       </a>
       <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-        <a class="dropdown-item" href="{{ url_for('feed') }}">Лента 🔸</a>
-        <a class="dropdown-item" href="{{ url_for('subscriptions') }}">Подписки</a>
+        <a class="dropdown-item" href="{{ url_for('feed') }}">Лента</a>
+        <a class="dropdown-item" href="{{ url_for('subscriptions') }}">Подписки 🔸</a>
       </div>
     </div>
   </ul>
@@ -33,28 +33,25 @@
 {% endblock %}
 
 {% block content %}
-  <div class="col-sm-9 col-md-7 col-lg-7 mx-auto py-4">
-    {% if questions %}
-      {% for question in questions %}
-        <div class="card question mb-3">
+  <div class="col-sm-9 col-md-7 col-lg-5 mx-auto py-4">
+    {% if users %}
+      {% for user in users %}
+        <div class="card sub question mb-3">
           <div class="card-body">
-            <div class="card-title">
-              {% if not question.is_anonymous %}
-                <small ><a href="{{ url_for('user', username=question.second_user.username) }}" class="text-decoration-none text-warning">@{{ question.second_user.username }}</a> ответил <a href="{{ url_for('user', username=question.main_user.username) }}" class="text-decoration-none text-warning">@{{ question.main_user.username }}</a></small>
+            <div class="card-text">
+              <img class="rounded-circle fit-small mr-2" src="{{ url_for('static', filename='avatars/' + user.avatar_id) }}" alt="">
+              <a href="{{ url_for('user', username=user.username) }}" class="text-decoration-none text-warning">@{{ user.username }}</a>
+              {% if not current_user.is_following(user) %}
+                <a href="{{ url_for('follow', username=user.username) }}" class="btn btn-sm btn-warning float-right">Подписаться</a>
               {% else %}
-                <small class="text-muted"><a href="{{ url_for('user', username=question.second_user.username) }}" class="text-decoration-none text-warning">@{{ question.second_user.username }}</a> ответил анониму</small>
+                <a href="{{ url_for('unfollow', username=user.username) }}" class="btn btn-sm btn-outline-warning float-right">Отписаться</a>
               {% endif %}
             </div>
-            <small class="text-muted float-right">{{ moment(question.date_created).format("L LT") }}</small>
-            <div class="card-text pt-1">{{ question.text }}</div>
-            <hr class="hr mt-4 mb-4">
-            <small class="text-muted float-right">{{ moment(question.date_modified).format("L LT") }}</small>
-            <div class="answer">{{ question.answer }}</div>
           </div>
         </div>
       {% endfor %}
     {% else %}
-      <h4 class="text-center py-4">Подписывайтесь на пользователей, чтобы видеть их ответы на вопросы 🙈</h4>
+      <h4 class="text-center py-4">Подписывайтесь на пользователей, чтобы видеть их профили здесь 🙈</h4>
     {% endif %}
   </div>
 {% endblock %}

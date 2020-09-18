@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Главная{% endblock %}
+
+{% block nav %}
+   <ul class="navbar-nav mr-auto">
+   </ul>
+   <div class="nav-item">
+      <a class="btn btn-outline-light" href="{{ url_for('login') }}">Вход</a>
+      <a class="btn btn-warning" href="{{ url_for('register') }}">Регистрация</a>
+   </div>
+{% endblock %}
+
+{% block content %}
+<div class="jumbotron text-white">
+	<h1 class="display-4 text-bold">Ещё нет аккаунта?</h1>
+	<p class="lead">Ты что, совсем?</p>
+	<hr class="my-4">
+	<p>Зарегай аккаунт или вычислю по айпи.</p>
+	  <a class="btn btn-warning btn-lg text-center" href="{{ url_for('register') }}" role="button">Создать аккаунт</a>
+  </div>
+  <div>
+<!-- Services-->
+<section class="page-section" id="services">
+	<div class="container">
+		<div class="text-center">
+			<h1 class="section-heading">Зачем это?</h1>
+		</div>
+		<div class="row text-center">
+			<div class="col-md-4">
+				<h4 class="my-3">Затем</h4>
+				<p class="text-muted">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Minima maxime quam architecto quo inventore harum ex magni, dicta impedit.</p>
+			</div>
+			<div class="col-md-4">
+				<h4 class="my-3">Потому что должен(на)</h4>
+				<p class="text-muted">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Minima maxime quam architecto quo inventore harum ex magni, dicta impedit.</p>
+			</div>
+			<div class="col-md-4">
+				<h4 class="my-3">Спрашивай фигню</h4>
+				<p class="text-muted">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Minima maxime quam architecto quo inventore harum ex magni, dicta impedit.</p>
+			</div>
+		</div>
+	</div>
+</section>
+{% endblock %}
