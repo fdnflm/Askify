@@ -29,3 +29,16 @@
   border-radius: 1rem;
   box-shadow: 0 0.5rem 1rem 0 rgba(0, 0, 0, 0.1);
 }
+
+.sub {
+  cursor: pointer;
+  transition: 0.2s ease-in-out;
+}
+
+.sub:hover {
+  scale: 1.1;
+}
+
+.navbar-nav .dropdown-menu {
+  position: absolute;
+}
