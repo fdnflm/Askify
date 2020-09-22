@@ -41,6 +41,10 @@
             <form id='img-form' action="/settings", method="POST" enctype="multipart/form-data">
               {{ edit_photo.hidden_tag() }}
               {{ edit_photo.photo(style="display: none;") }}
+              {% for error in edit_photo.photo.errors %}
+                <p class="text-danger">{{ error }}</p>
+              {% endfor %}
+              {{ edit_photo.submit3(style="display: none;") }}
             </form>
             <h6 class="text-muted">@{{ user.username }}</h6>
 
@@ -236,8 +240,8 @@
           var fr = new FileReader();
           fr.onload = function () {
             document.getElementById("main-pic").src = fr.result;
-            form = document.getElementById("img-form")
-            form.submit()
+            btn = document.getElementById("apply")
+            btn.click()
           }
           fr.readAsDataURL(files[0]);
         }

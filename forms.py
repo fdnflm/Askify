@@ -167,4 +167,4 @@ class EditPhotoForm(FlaskForm):
 							message="Максимальный размер файла - 12 мб")
 				],
 				id="profile_image")
-	submit3 = SubmitField("Сохранить")
+	submit3 = SubmitField("Сохранить", id="apply")
