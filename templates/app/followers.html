@@ -37,11 +37,11 @@
 
     {% if list_type == 'followers' %}
       <h5 class="font-weight-bold pb-2">Подписчики пользователя
-        <a href="#" class="text-decoration-none text-warning">@{{ view_user.username }}</a>
+        <a href="{{ url_for('user', username=view_user.username) }}" class="text-decoration-none text-warning">@{{ view_user.username }}</a>
       </h5>
     {% elif list_type == 'followed' %}
       <h5 class="font-weight-bold pb-2">Подписки пользователя
-        <a href="#" class="text-decoration-none text-warning">@{{ view_user.username }}</a>
+        <a href="{{ url_for('user', username=view_user.username) }}" class="text-decoration-none text-warning">@{{ view_user.username }}</a>
       </h5>
     {% endif %}
 

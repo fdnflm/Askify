@@ -46,16 +46,13 @@
       <div class="card-body">
         <div class="text-center">
           {% if user %}
-            <img src="{{ url_for('static', filename='avatars/' + user.avatar_id) }}" class="rounded fit-big p-3 mx-auto d-block" alt="avatar">
+            <img src="{{ url_for('static', filename='avatars/' + user.avatar_id) }}" class="rounded-circle fit-big p-3 mx-auto d-block" alt="avatar">
             <h6 class="text-muted">@{{ user.username }}</h6>
 
-            {% if user.first_name %}
-              <h5>{{ user.first_name }} </h5>
-            {% endif %}
-
-            {% if user.last_name %} 
-              <h5>{{ user.last_name }}</h5>
-            {% endif %}
+            <h5>
+              {{ user.first_name if user.first_name else "" }}
+              {{ user.last_name if user.last_name else ""}}
+            </h5>
 
             {% if user.bio %}
               <h6 class="text-muted">{{ user.bio }}</h6>
@@ -66,7 +63,7 @@
             {% endif %}
 
             {% if user.country %}
-              <span class="pr-2"><i class="fa fa-map-marker" aria-hidden="true"></i> {{ user.country }}, {{ user.city }}</span>
+              <span class="pr-2"><i class="fa fa-map-marker" aria-hidden="true"></i> {{ user.country }}{% if user.city %}, {{ user.city }}{% endif %}</span>
               <br>
             {% endif %}
 
@@ -85,15 +82,15 @@
               </span>
             {% endif %}
             
+            {% if info %}
+              <hr class="w-50">
+            {% endif %}
+
             <div class="">
               <a href="{{ url_for('user', username=user.username, list_type='followers') }}" class="text-body text-decoration-none">Подписчики: {{ followers_amount }}</a>
                | 
               <a href="{{ url_for('user', username=user.username, list_type='followed') }}" class="text-body text-decoration-none">Подписки: {{ followed_amount }}</a>
             </div>
-
-            {% if info %}
-              <hr class="w-50">
-            {% endif %}
             
             {% if current_user != user %}
             <div class="pt-3">
@@ -143,6 +140,11 @@
                 <small ><a href="{{ url_for('user', username=question.main_user.username) }}" class="text-decoration-none text-warning">@{{ question.main_user.username }}</a> задал вопрос</small>
               {% else %}
                 <small class="text-muted">Анонимно</small>
+              {% endif %}
+              {% if current_user == user %}
+              <a type="button" class="close float-right" data-dismiss="modal" title="Удалить" href="{{ url_for('delete_question', question_id=question.id) }}">
+                <span aria-hidden="true">&times;</span>
+              </a>
               {% endif %}
             </div>
             <small class="text-muted float-right">{{ moment(question.date_created).format("L LT") }}</small>
