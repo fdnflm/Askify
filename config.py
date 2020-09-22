@@ -16,3 +16,5 @@ MAIL_USE_SSL = False
 MAIL_USERNAME = ""
 MAIL_PASSWORD = ""
 MAIL_DEFAULT_SENDER = ""
+
+UPLOAD_FOLDER = "static/avatars"
