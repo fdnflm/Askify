@@ -2,13 +2,15 @@ from app import app, db, mail
 from flask import render_template, redirect, abort, flash, request, url_for
 from flask_login import current_user, login_user, login_required, logout_user
 from models import User, Question
-from forms import LoginForm, RegisterForm, ResetForm, NewPassForm, QuestionForm, AnswerForm
+from forms import LoginForm, RegisterForm, ResetForm, NewPassForm, QuestionForm, AnswerForm, EditForm, EditForm2, EditPhotoForm
 from werkzeug.security import check_password_hash
 from werkzeug.urls import url_parse
+from werkzeug.utils import secure_filename
 from flask_mail import Message
 from misc import generate_id, check_confirmed
 from datetime import datetime
 from sqlalchemy.exc import IntegrityError
+import os
 
 
 @app.route("/")
@@ -151,14 +153,80 @@ def delete_question(question_id):
 		flash("Вопрос успешно удалён.")
 	else:
 		abort(403)
+	if request.referrer != url_for('questions'):
+		return redirect(request.referrer)
 	return redirect(url_for('questions'))
 
 
-@app.route("/settings")
+@app.route("/settings", methods=["GET", "POST"])
 @login_required
 @check_confirmed
 def settings():
-	return render_template("app/settings.html")
+	edit_profile = EditForm(current_user.username)
+	edit_password = EditForm2()
+	edit_photo = EditPhotoForm()
+
+	if edit_profile.submit.data and edit_profile.validate():
+		if edit_profile.username.data != current_user.username:
+				current_user.username = edit_profile.username.data
+
+		current_user.first_name = edit_profile.first_name.data
+		current_user.last_name = edit_profile.last_name.data
+
+		regions = []
+		regions.append(open("regions/country.csv", "r").readlines())
+		if edit_profile.country.data:
+			if edit_profile.country.data + "\n" in regions[0]:
+				current_user.country = edit_profile.country.data
+			else:
+				edit_profile.country.errors.append("Такой страны не существует")
+		else:
+			current_user.country = ""
+
+		regions.append(open("regions/city.csv", "r").readlines())
+		if edit_profile.city.data:
+			if edit_profile.city.data + "\n" in regions[1]:
+				current_user.city = edit_profile.city.data
+			else:
+				edit_profile.city.errors.append("Такого города не существует")
+		else:
+			current_user.city = ""
+
+		if current_user.country == "" and current_user.city:
+			edit_profile.country.errors.append("Для отображения местоположения поле 'Страна' не может быть пустым")
+		
+		current_user.instagram = edit_profile.inst.data
+		current_user.telegram = edit_profile.telegram.data
+		current_user.bio = edit_profile.bio.data
+		db.session.commit()
+		return redirect(url_for('settings'))
+
+	edit_profile.bio.data = current_user.bio if current_user.bio else ""
+
+	if edit_password.submit2.data and edit_password.validate():
+		if edit_password.new_password.data:
+			if check_password_hash(current_user.password, edit_password.current_password.data):
+				current_user.set_password(edit_password.new_password.data)
+				flash("Пароль успешно изменен")
+				db.session.commit()
+			else:
+				flash("Пароли не совпадают")
+		return redirect(url_for('settings'))
+
+	if edit_photo.submit3.data and edit_photo.validate():
+		avatar = edit_photo.photo.data
+		filename = secure_filename(generate_id(6) + ".jpg")
+		avatar.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+		current_user.avatar_id = filename
+		db.session.commit()
+		return redirect(url_for('settings'))
+
+	return render_template("app/settings.html",
+							user=current_user,
+							questions_amount=current_user.get_questions_amount(),
+							form=edit_profile,
+							edit_pwd=edit_password,
+							edit_photo=edit_photo)
 
 
 @app.route("/login", methods=["GET", "POST"])

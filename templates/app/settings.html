@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+
+{% block title %}Настройки{% endblock %}
+
+{% block nav %}
+  <ul class="navbar-nav mr-auto">
+    <div class="nav-item dropdown">
+      <a class="nav-link dropdown-toggle text-white" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        Меню 📁
+      </a>
+      <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+        <a class="dropdown-item" href="{{ url_for('feed') }}">Лента</a>
+        <a class="dropdown-item" href="{{ url_for('subscriptions') }}">Подписки</a>
+      </div>
+    </div>
+  </ul>
+  <div class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle text-white" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    <span class="mr-2">{{ current_user.username }}</span><img class="rounded-circle fit-small" src="{{ url_for('static', filename='avatars/' + current_user.avatar_id) }}" alt="">
+    </a>
+    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+      <a class="dropdown-item" href="{{ url_for('user', username=user.username) }}">Профиль</a>
+      <a class="dropdown-item" href="{{ url_for('questions') }}">Вопросы
+      {% if questions_amount > 0 %}
+        <span class="badge badge-warning">{{ questions_amount }}</span>
+      {% endif %}
+      </a>
+      <div class="dropdown-divider"></div>
+      <a class="dropdown-item" href="{{ url_for('logout') }}">Выйти</a>
+    </div>
+  </div>
+{% endblock %}
+
+{% block content %}
+  <div class="col-md-7 col-lg-7 mx-auto pb-4">
+    <div class="card question py-2 mt-5 mb-3">
+      <div class="card-body">
+        <div class="text-center">
+          {% if user %}
+            <input type="image" id="main-pic" src="{{ url_for('static', filename='avatars/' + user.avatar_id) }}" class="rounded-circle fit-big p-3 mx-auto d-block" alt="avatar">
+            <form id='img-form' action="/settings", method="POST" enctype="multipart/form-data">
+              {{ edit_photo.hidden_tag() }}
+              {{ edit_photo.photo(style="display: none;") }}
+            </form>
+            <h6 class="text-muted">@{{ user.username }}</h6>
+
+              <h5>
+                {{ user.first_name if user.first_name else "" }}
+                {{ user.last_name if user.last_name else ""}}
+              </h5>
+
+            {% if user.bio %}
+              <h6 class="text-muted">{{ user.bio }}</h6>
+            {% endif %}
+
+            {% if info %}
+              <hr class="w-50">
+            {% endif %}
+
+            {% if user.country %}
+              <span class="pr-2"><i class="fa fa-map-marker" aria-hidden="true"></i> {{ user.country }}{% if user.city %}, {{ user.city }}{% endif %}</span>
+              <br>
+            {% endif %}
+
+            {% if user.telegram %}
+              <span class="pr-2">
+                <i class="fa fa-paper-plane" aria-hidden="true"></i> 
+                <a class="text-body text-decoration-none" href="https://t.me/{{ user.telegram }}">{{ user.telegram }}</a>
+              </span>
+              <br>
+            {% endif %}
+
+            {% if user.instagram %}
+              <span class="pr-2">
+                <i class="fa fa-camera-retro" aria-hidden="true"></i> 
+                <a class="text-body text-decoration-none" href="https://instagram.com/{{ user.instagram }}">{{ user.instagram }}</a>
+              </span>
+            {% endif %}
+            
+            {% if info %}
+              <hr class="w-50">
+            {% endif %}
+            
+            <p class="pt-2">
+              <a href="#" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#settingsWindow">Изменить</a>
+            </p>
+
+             <!-- Modal -->
+            <div class="modal fade text-left" id="settingsWindow" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">Изменить профиль</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <form action="/settings" method="POST" class="needs-validation">
+                    {{ form.hidden_tag() }}
+                    <div class="modal-body">
+                      <!-- Username -->
+                      <div class="form-group">
+                        <label >Имя пользователя</label>
+                        {{ form.username(class="form-control py-2", placeholder=form.username.label.text, value=user.username) }}
+                        {% for error in form.username.errors %}
+                          <p class="text-danger">{{ error }}</p>
+                        {% endfor %}
+                        <div class="invalid-feedback">Пожалуйста, введите верное имя пользователя.</div>
+                      </div>
+                      <!-- first name -->
+                      <div class="form-group">
+                        <label>Имя</label>
+                        {{ form.first_name(class="form-control py-2", placeholder=form.first_name.label.text, value=user.first_name if user.first_name else "") }}
+                        {% for error in form.first_name.errors %}
+                          <p class="text-danger">{{ error }}</p>
+                        {% endfor %}
+                        <div class="invalid-feedback">Пожалуйста, введите верное имя.</div>
+                      </div>
+                      <!-- last name -->
+                      <div class="form-group">
+                        <label>Фамилия</label>
+                        {{ form.last_name(class="form-control py-2", placeholder=form.last_name.label.text, value=user.last_name if user.last_name else "") }}
+                        {% for error in form.last_name.errors %}
+                          <p class="text-danger">{{ error }}</p>
+                        {% endfor %}
+                        <div class="invalid-feedback">Пожалуйста, введите верную фамилию.</div>
+                      </div>
+
+                      <div class="form-group">
+                        <label>Страна</label>
+                        {{ form.country(class="form-control py-2", placeholder=form.country.label.text, value=user.country if user.country else "") }}
+                        {% for error in form.country.errors %}
+                          <p class="text-danger">{{ error }}</p>
+                        {% endfor %}
+                        <div class="invalid-feedback">Пожалуйста, введите верную страну.</div>
+                      </div>
+
+                      <div class="form-group">
+                        <label>Город</label>
+                        {{ form.city(class="form-control py-2", placeholder=form.city.label.text, value=user.city if user.city else "") }}
+                        {% for error in form.city.errors %}
+                          <p class="text-danger">{{ error }}</p>
+                        {% endfor %}
+                        <div class="invalid-feedback">Пожалуйста, введите верную город.</div>
+                      </div>
+
+                      <!-- Instagram -->
+                      <div class="form-group">
+                        <label>Instagram</label>
+                        {{ form.inst(class="form-control py-2", placeholder=form.inst.label.text, value=user.instagram if user.instagram else "") }}
+                        {% for error in form.inst.errors %}
+                          <p class="text-danger">{{ error }}</p>
+                        {% endfor %}
+                        <div class="invalid-feedback">Пожалуйста, введите верную фамилию.</div>
+                      </div>
+
+                      <!-- Telegram -->
+                      <div class="form-group">
+                        <label>Telegram</label>
+                        {{ form.telegram(class="form-control py-2", placeholder=form.telegram.label.text, value=user.telegram if user.telegram else "") }}
+                        {% for error in form.telegram.errors %}
+                          <p class="text-danger">{{ error }}</p>
+                        {% endfor %}
+                        <div class="invalid-feedback">Пожалуйста, введите верную фамилию.</div>
+                      </div>
+
+                      <!-- Bio -->
+                      <div class="form-group">
+                        <label>О себе</label>
+                        {{ form.bio(class="form-control py-2", placeholder=form.bio.label.text) }}
+                        {% for error in form.bio.errors %}
+                          <p class="text-danger">{{ error }}</p>
+                        {% endfor %}
+                        <div class="invalid-feedback">Пожалуйста, введите верную фамилию.</div>
+                      </div>
+
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+                      {{ form.submit(class="btn btn-success") }}
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card question py-2 mt-5 mb-3">
+    <div class="card-body">
+      <form action="/settings" method="post">
+        {{ edit_pwd.hidden_tag() }}
+
+        <div class="form-group">
+          <label >Новый пароль</label>
+          {{ edit_pwd.new_password(class="form-control py-2", placeholder=edit_pwd.new_password.label.text) }}
+          {% for error in edit_pwd.new_password.errors %}
+            <p class="text-danger">{{ error }}</p>
+          {% endfor %}
+          <div class="invalid-feedback">Пожалуйста, введите верное имя пользователя.</div>
+        </div>
+
+        <div class="form-group">
+          <label >Текущий пароль <span class="text-danger">*</span></label>
+          {{ edit_pwd.current_password(class="form-control py-2", placeholder=edit_pwd.current_password.label.text) }}
+          {% for error in edit_pwd.current_password.errors %}
+            <p class="text-danger">{{ error }}</p>
+          {% endfor %}
+          <div class="invalid-feedback">Пожалуйста, введите верное имя пользователя.</div>
+        </div>
+
+        {{ edit_pwd.submit2(class="btn btn-success float-right") }}
+      </form>
+    </div>
+  </div>
+</div>
+  
+  {% if form.errors %}
+  <script>
+      $("#settingsWindow").modal("show")
+  </script>
+  {% endif %}
+
+  <script>
+    $("input[type='image']").click(function() {
+      $("input[id='profile_image']").click();
+    });
+    document.getElementById('profile_image').onchange = function (evt) {
+        var tgt = evt.target || window.event.srcElement,
+        files = tgt.files;
+        
+        // FileReader support
+        if (FileReader && files && files.length) {
+          var fr = new FileReader();
+          fr.onload = function () {
+            document.getElementById("main-pic").src = fr.result;
+            form = document.getElementById("img-form")
+            form.submit()
+          }
+          fr.readAsDataURL(files[0]);
+        }
+    }
+  </script>
+
+{% endblock %}
